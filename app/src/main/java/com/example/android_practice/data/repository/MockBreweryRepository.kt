@@ -1,6 +1,7 @@
 package com.example.android_practice.data.repository
 
-import com.example.android_practice.data.model.Brewery
+import com.example.android_practice.domain.model.Brewery
+import com.example.android_practice.domain.repository.BreweryRepository
 
 class MockBreweryRepository : BreweryRepository {
 
@@ -175,11 +176,19 @@ class MockBreweryRepository : BreweryRepository {
         )
     )
 
-    override suspend fun getBreweries(): List<Brewery> {
-        return mockBreweries
+    override suspend fun getBreweries(state: String?): List<Brewery> {
+        return if (state.isNullOrBlank()) {
+            mockBreweries
+        } else {
+            mockBreweries.filter { it.stateProvince.equals(state, ignoreCase = true) }
+        }
     }
 
     override suspend fun getBreweryById(id: String): Brewery? {
         return mockBreweries.find { it.id == id }
+    }
+
+    override suspend fun searchBreweries(query: String): List<Brewery> {
+        return mockBreweries.filter { it.name.contains(query, ignoreCase = true) }
     }
 }

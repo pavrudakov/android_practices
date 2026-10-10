@@ -7,16 +7,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SportsBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.android_practice.data.model.Brewery
+import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.ui.common.UiState
 import com.example.android_practice.ui.list.components.BreweryCard
 
@@ -42,6 +45,16 @@ fun BreweryListScreen(
     viewModel: BreweryListViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedState by viewModel.selectedState.collectAsState()
+
+    val availableStates = listOf(
+        "California" to "Калифорния",
+        "Ohio" to "Огайо",
+        "Texas" to "Техас",
+        "New York" to "Нью-Йорк",
+        "Colorado" to "Колорадо",
+        "Oregon" to "Орегон"
+    )
 
     Column(
         modifier = modifier
@@ -62,6 +75,31 @@ fun BreweryListScreen(
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
+
+        // State Filter Chips Row
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            item {
+                FilterChip(
+                    selected = selectedState == null,
+                    onClick = { viewModel.loadBreweries(null) },
+                    label = { Text("Все") }
+                )
+            }
+            items(availableStates) { (stateKey, stateName) ->
+                FilterChip(
+                    selected = selectedState.equals(stateKey, ignoreCase = true),
+                    onClick = {
+                        val newState = if (selectedState.equals(stateKey, ignoreCase = true)) null else stateKey
+                        viewModel.loadBreweries(newState)
+                    },
+                    label = { Text(stateName) }
+                )
+            }
+        }
 
         Box(
             modifier = Modifier

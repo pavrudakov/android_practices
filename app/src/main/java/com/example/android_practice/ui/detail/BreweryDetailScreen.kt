@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.android_practice.data.model.Brewery
+import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.ui.common.BreweryTypeBadge
 import com.example.android_practice.ui.common.UiState
 
