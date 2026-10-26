@@ -8,7 +8,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.android_practice.ui.detail.BreweryDetailScreen
+import com.example.android_practice.ui.favorites.FavoritesScreen
 import com.example.android_practice.ui.list.BreweryListScreen
+import com.example.android_practice.ui.settings.SettingsScreen
 
 @Composable
 fun AppNavGraph(
@@ -24,6 +26,9 @@ fun AppNavGraph(
             BreweryListScreen(
                 onBreweryClick = { breweryId ->
                     navController.navigate(Screen.Detail.createRoute(breweryId))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }
@@ -45,8 +50,20 @@ fun AppNavGraph(
             )
         }
 
+        composable(route = Screen.Settings.route) {
+            SettingsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         composable(route = Screen.Favorites.route) {
-            PlaceholderScreen(title = "Избранное")
+            FavoritesScreen(
+                onBreweryClick = { breweryId ->
+                    navController.navigate(Screen.Detail.createRoute(breweryId))
+                }
+            )
         }
 
         composable(route = Screen.Profile.route) {

@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.ui.common.BreweryTypeBadge
 import com.example.android_practice.ui.common.UiState
@@ -57,13 +58,10 @@ fun BreweryDetailScreen(
     breweryId: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: BreweryDetailViewModel = viewModel()
+    viewModel: BreweryDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(breweryId) {
-        viewModel.loadBrewery(breweryId)
-    }
+    val isFavorite by viewModel.isFavorite.collectAsState()
 
     Column(
         modifier = modifier
@@ -86,11 +84,23 @@ fun BreweryDetailScreen(
                     )
                 }
             },
+            actions = {
+                if (uiState is UiState.Success) {
+                    IconButton(onClick = { viewModel.toggleFavorite() }) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription = if (isFavorite) "Удалить из избранного" else "Добавить в избранное",
+                            tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
 
