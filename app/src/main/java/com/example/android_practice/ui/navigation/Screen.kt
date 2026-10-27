@@ -5,6 +5,7 @@ sealed class Screen(val route: String) {
     object Detail : Screen("brewery_detail/{breweryId}") {
         fun createRoute(breweryId: String): String = "brewery_detail/$breweryId"
     }
+    object Settings : Screen("settings")
     object Favorites : Screen("favorites")
     object Profile : Screen("profile")
 }

@@ -19,6 +19,9 @@ import com.example.android_practice.ui.navigation.AppNavGraph
 import com.example.android_practice.ui.navigation.Screen
 import com.example.android_practice.ui.theme.Android_practiceTheme
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
