@@ -7,4 +7,5 @@ interface BreweryRepository {
     suspend fun getBreweries(settings: FilterSettings = FilterSettings()): List<Brewery>
     suspend fun getBreweryById(id: String): Brewery?
     suspend fun searchBreweries(query: String): List<Brewery>
+    fun getCachedBreweries(settings: FilterSettings = FilterSettings()): List<Brewery>?
 }

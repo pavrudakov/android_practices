@@ -20,13 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.ui.common.BreweryTypeBadge
 import com.example.android_practice.ui.common.BreweryTypeIconPlaceholder
+import com.example.android_practice.ui.list.model.BreweryItemUiModel
 
 @Composable
 fun BreweryCard(
-    brewery: Brewery,
+    brewery: BreweryItemUiModel,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -71,23 +71,25 @@ fun BreweryCard(
 
                 BreweryTypeBadge(type = brewery.breweryType)
 
-                Spacer(modifier = Modifier.height(6.dp))
+                if (brewery.locationText.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.height(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${brewery.city}, ${brewery.stateProvince}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Location",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.height(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = brewery.locationText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

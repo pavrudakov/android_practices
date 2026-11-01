@@ -2,7 +2,6 @@ package com.example.android_practice.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android_practice.data.cache.FilterBadgeCache
 import com.example.android_practice.domain.model.FilterSettings
 import com.example.android_practice.domain.usecase.ObserveFilterSettingsUseCase
 import com.example.android_practice.domain.usecase.ResetFilterSettingsUseCase
@@ -23,8 +22,7 @@ class SettingsViewModel @Inject constructor(
     private val observeFilterSettingsUseCase: ObserveFilterSettingsUseCase,
     private val saveFilterSettingsUseCase: SaveFilterSettingsUseCase,
     private val resetFilterSettingsUseCase: ResetFilterSettingsUseCase,
-    private val searchBreweriesUseCase: SearchBreweriesUseCase,
-    private val filterBadgeCache: FilterBadgeCache
+    private val searchBreweriesUseCase: SearchBreweriesUseCase
 ) : ViewModel() {
 
     private val _draftSettings = MutableStateFlow(FilterSettings())
@@ -39,7 +37,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val current = observeFilterSettingsUseCase().first()
             _draftSettings.value = current
-            filterBadgeCache.sync(current)
         }
     }
 
@@ -84,7 +81,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val toSave = _draftSettings.value
             saveFilterSettingsUseCase(toSave)
-            filterBadgeCache.sync(toSave)
             onDone()
         }
     }
@@ -94,7 +90,6 @@ class SettingsViewModel @Inject constructor(
             _draftSettings.value = FilterSettings()
             _nameSuggestions.value = emptyList()
             resetFilterSettingsUseCase()
-            filterBadgeCache.sync(FilterSettings())
         }
     }
 }

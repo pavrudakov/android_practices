@@ -10,6 +10,8 @@ import androidx.navigation.navArgument
 import com.example.android_practice.ui.detail.BreweryDetailScreen
 import com.example.android_practice.ui.favorites.FavoritesScreen
 import com.example.android_practice.ui.list.BreweryListScreen
+import com.example.android_practice.ui.profile.ProfileScreen
+import com.example.android_practice.ui.profile.edit.ProfileEditScreen
 import com.example.android_practice.ui.settings.SettingsScreen
 
 @Composable
@@ -67,7 +69,19 @@ fun AppNavGraph(
         }
 
         composable(route = Screen.Profile.route) {
-            PlaceholderScreen(title = "Профиль")
+            ProfileScreen(
+                onNavigateToEdit = {
+                    navController.navigate(Screen.ProfileEdit.route)
+                }
+            )
+        }
+
+        composable(route = Screen.ProfileEdit.route) {
+            ProfileEditScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

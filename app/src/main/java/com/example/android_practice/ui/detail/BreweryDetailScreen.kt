@@ -48,9 +48,9 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.ui.common.BreweryTypeBadge
 import com.example.android_practice.ui.common.UiState
+import com.example.android_practice.ui.detail.model.BreweryDetailUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +117,7 @@ fun BreweryDetailScreen(
                     )
                 }
                 is UiState.Success -> {
-                    BreweryDetailConstraintContent(brewery = state.data)
+                    BreweryDetailConstraintContent(breweryUiModel = state.data)
                 }
                 is UiState.Error -> {
                     Column(
@@ -143,7 +143,7 @@ fun BreweryDetailScreen(
 }
 
 @Composable
-private fun BreweryDetailConstraintContent(brewery: Brewery) {
+private fun BreweryDetailConstraintContent(breweryUiModel: BreweryDetailUiModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
@@ -177,14 +177,14 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
         ) {
             Column {
                 Text(
-                    text = brewery.name,
+                    text = breweryUiModel.name,
                     style = MaterialTheme.typography.headlineLarge,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                BreweryTypeBadge(type = brewery.breweryType)
+                BreweryTypeBadge(type = breweryUiModel.breweryType)
             }
         }
 
@@ -218,24 +218,27 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                val street = brewery.street
-                if (!street.isNullOrBlank()) {
+                if (breweryUiModel.streetText != null) {
                     Text(
-                        text = street,
+                        text = breweryUiModel.streetText,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Text(
-                    text = "${brewery.city}, ${brewery.stateProvince} ${brewery.postalCode}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = brewery.country,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (breweryUiModel.addressText.isNotBlank()) {
+                    Text(
+                        text = breweryUiModel.addressText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (breweryUiModel.countryText.isNotBlank()) {
+                    Text(
+                        text = breweryUiModel.countryText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
@@ -263,14 +266,14 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Phone
-                val phone = brewery.phone
-                if (!phone.isNullOrBlank()) {
+                val rawPhone = breweryUiModel.rawPhone
+                if (rawPhone != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$rawPhone"))
                                 context.startActivity(intent)
                             }
                             .padding(vertical = 6.dp)
@@ -282,7 +285,7 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = phone,
+                            text = breweryUiModel.phoneText,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
@@ -290,7 +293,7 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                     }
                 } else {
                     Text(
-                        text = "Телефон: нет данных",
+                        text = breweryUiModel.phoneText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -299,14 +302,14 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // Website
-                val websiteUrl = brewery.websiteUrl
-                if (!websiteUrl.isNullOrBlank()) {
+                val rawWebsite = breweryUiModel.rawWebsite
+                if (rawWebsite != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(rawWebsite))
                                 context.startActivity(intent)
                             }
                             .padding(vertical = 6.dp)
@@ -318,7 +321,7 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = websiteUrl,
+                            text = breweryUiModel.websiteText,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium,
@@ -332,7 +335,7 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                     }
                 } else {
                     Text(
-                        text = "Веб-сайт: нет данных",
+                        text = breweryUiModel.websiteText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -370,9 +373,10 @@ private fun BreweryDetailConstraintContent(brewery: Brewery) {
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if (brewery.latitude != null && brewery.longitude != null) {
+                val coordsText = breweryUiModel.coordinatesText
+                if (coordsText != null) {
                     Text(
-                        text = "Широта: ${brewery.latitude}\nДолгота: ${brewery.longitude}",
+                        text = coordsText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )

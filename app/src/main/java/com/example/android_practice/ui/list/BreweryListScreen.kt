@@ -38,11 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.android_practice.domain.model.Brewery
-import com.example.android_practice.domain.model.FilterSettings
 import com.example.android_practice.domain.usecase.FilterField
 import com.example.android_practice.ui.common.UiState
 import com.example.android_practice.ui.list.components.BreweryCard
+import com.example.android_practice.ui.list.model.BreweryItemUiModel
+import com.example.android_practice.ui.list.model.FilterChipUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +53,7 @@ fun BreweryListScreen(
     viewModel: BreweryListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val settings by viewModel.filterSettings.collectAsState()
+    val filterChips by viewModel.activeFilterChips.collectAsState()
     val showBadge by viewModel.showBadge.collectAsState()
 
     Column(
@@ -97,9 +97,9 @@ fun BreweryListScreen(
         )
 
         // Active Filter Chips Row
-        if (!settings.isDefault()) {
+        if (filterChips.isNotEmpty()) {
             ActiveFiltersRow(
-                settings = settings,
+                filterChips = filterChips,
                 onChipClick = onNavigateToSettings,
                 onClearFilter = { field -> viewModel.clearSingleFilter(field) }
             )
@@ -120,7 +120,7 @@ fun BreweryListScreen(
                 is UiState.Success -> {
                     if (state.data.isEmpty()) {
                         EmptyListContent(
-                            isFiltered = !settings.isDefault(),
+                            isFiltered = filterChips.isNotEmpty(),
                             onResetFilters = { viewModel.resetAllFilters() },
                             modifier = Modifier.align(Alignment.Center)
                         )
@@ -157,7 +157,7 @@ fun BreweryListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActiveFiltersRow(
-    settings: FilterSettings,
+    filterChips: List<FilterChipUiModel>,
     onChipClick: () -> Unit,
     onClearFilter: (FilterField) -> Unit
 ) {
@@ -166,65 +166,26 @@ private fun ActiveFiltersRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (settings.state.isNotBlank()) {
-            item {
-                InputChip(
-                    selected = true,
-                    onClick = onChipClick,
-                    label = { Text("Штат: ${settings.state}") },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { onClearFilter(FilterField.STATE) },
-                            modifier = Modifier.size(18.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Очистить штат"
-                            )
-                        }
+        items(
+            items = filterChips,
+            key = { it.field.name }
+        ) { chip ->
+            InputChip(
+                selected = true,
+                onClick = onChipClick,
+                label = { Text(chip.text) },
+                trailingIcon = {
+                    IconButton(
+                        onClick = { onClearFilter(chip.field) },
+                        modifier = Modifier.size(18.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Очистить"
+                        )
                     }
-                )
-            }
-        }
-        if (settings.type.isNotBlank()) {
-            item {
-                InputChip(
-                    selected = true,
-                    onClick = onChipClick,
-                    label = { Text("Тип: ${settings.type}") },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { onClearFilter(FilterField.TYPE) },
-                            modifier = Modifier.size(18.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Очистить тип"
-                            )
-                        }
-                    }
-                )
-            }
-        }
-        if (settings.name.isNotBlank()) {
-            item {
-                InputChip(
-                    selected = true,
-                    onClick = onChipClick,
-                    label = { Text("Название: ${settings.name}") },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { onClearFilter(FilterField.NAME) },
-                            modifier = Modifier.size(18.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Очистить название"
-                            )
-                        }
-                    }
-                )
-            }
+                }
+            )
         }
     }
 }
@@ -263,7 +224,7 @@ private fun EmptyListContent(
 
 @Composable
 private fun BreweryListContent(
-    breweries: List<Brewery>,
+    breweries: List<BreweryItemUiModel>,
     onBreweryClick: (String) -> Unit
 ) {
     LazyColumn(
