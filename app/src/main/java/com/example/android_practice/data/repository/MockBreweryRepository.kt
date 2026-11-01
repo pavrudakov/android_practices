@@ -177,6 +177,8 @@ class MockBreweryRepository : BreweryRepository {
         )
     )
 
+    override fun getCachedBreweries(settings: FilterSettings): List<Brewery>? = null
+
     override suspend fun getBreweries(settings: FilterSettings): List<Brewery> {
         return mockBreweries.filter { brewery ->
             val matchState = settings.state.isBlank() || brewery.stateProvince.equals(settings.state, ignoreCase = true)

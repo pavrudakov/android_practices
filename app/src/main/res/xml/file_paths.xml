@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="avatars" path="avatars/" />
+    <files-path name="resumes" path="resumes/" />
+    <external-files-path name="downloads" path="Download/" />
+    <external-files-path name="external_resumes" path="." />
+    <external-path name="external_files" path="." />
+</paths>

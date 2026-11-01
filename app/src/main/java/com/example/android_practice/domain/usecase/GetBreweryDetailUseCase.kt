@@ -1,5 +1,6 @@
 package com.example.android_practice.domain.usecase
 
+import com.example.android_practice.domain.error.NetworkUnavailableException
 import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.domain.repository.BreweryRepository
 import com.example.android_practice.domain.repository.FavoritesRepository
@@ -13,7 +14,7 @@ class GetBreweryDetailUseCase @Inject constructor(
         val favorite = favoritesRepository.getFavorite(id)
         return try {
             repository.getBreweryById(id) ?: favorite
-        } catch (e: Exception) {
+        } catch (e: NetworkUnavailableException) {
             favorite ?: throw e
         }
     }
