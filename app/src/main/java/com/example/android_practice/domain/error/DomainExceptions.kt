@@ -11,3 +11,5 @@ class ResourceNotFoundException(message: String? = null, cause: Throwable? = nul
 class InvalidUrlException(message: String? = null, cause: Throwable? = null) : DomainException(message, cause)
 
 class NotAFileException(message: String? = null, cause: Throwable? = null) : DomainException(message, cause)
+
+class InvalidReminderTimeException(message: String? = null, cause: Throwable? = null) : DomainException(message ?: "Некорректный формат времени", cause)
