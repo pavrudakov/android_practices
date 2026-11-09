@@ -1,8 +1,12 @@
 package com.example.android_practice.ui.profile.edit
 
+import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,7 +34,9 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SportsBar
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,11 +45,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,13 +67,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.android_practice.domain.model.ReminderTime
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,12 +92,21 @@ fun ProfileEditScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var showPhotoPickerSheet by remember { mutableStateOf(false) }
+    var showTimePickerDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
     val hasCameraFeature = remember(context) {
         context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+    }
+
+    // Notification Permission Launcher
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.onNotificationPermissionResult(granted)
     }
 
     // Gallery Launcher (System Photo Picker)
@@ -94,8 +125,67 @@ fun ProfileEditScreen(
         viewModel.onCameraPhotoCaptured(success)
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ProfileEditEvent.RequestNotificationPermission -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        viewModel.onNotificationPermissionResult(true)
+                    }
+                }
+                is ProfileEditEvent.SaveSuccess -> {
+                    onBackClick()
+                }
+                is ProfileEditEvent.ShowSnackbar -> {
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = event.actionLabel,
+                            duration = SnackbarDuration.Long
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            val intent = when (event.actionType) {
+                                SnackbarActionType.APP_NOTIFICATION_SETTINGS -> {
+                                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                    }
+                                }
+                                SnackbarActionType.EXACT_ALARM_SETTINGS -> {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                            data = Uri.parse("package:${context.packageName}")
+                                        }
+                                    } else null
+                                }
+                                null -> null
+                            }
+                            intent?.let {
+                                try {
+                                    context.startActivity(it)
+                                } catch (e: ActivityNotFoundException) {
+                                    Toast.makeText(context, "Не удалось открыть настройки", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        onBackClick()
+                    }
+                }
+            }
+        }
+    }
+
+    val isDoneEnabled = state.isReminderTimeValid
+    val doneIconColor = if (isDoneEnabled) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.38f)
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -130,12 +220,25 @@ fun ProfileEditScreen(
                     } else {
                         IconButton(
                             onClick = {
-                                viewModel.save(onSuccess = onBackClick)
+                                val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                } else {
+                                    true
+                                }
+                                val isPermissionCheckRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                                viewModel.onSaveClicked(
+                                    hasNotificationPermission = hasPermission,
+                                    isPermissionCheckRequired = isPermissionCheckRequired
+                                )
                             }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = "Готово"
+                                contentDescription = "Готово",
+                                tint = doneIconColor
                             )
                         }
                     }
@@ -214,7 +317,7 @@ fun ProfileEditScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Input Fields
+            // 1. Name
             OutlinedTextField(
                 value = state.fullName,
                 onValueChange = { viewModel.onFullNameChange(it) },
@@ -225,6 +328,7 @@ fun ProfileEditScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // 2. Position
             OutlinedTextField(
                 value = state.position,
                 onValueChange = { viewModel.onPositionChange(it) },
@@ -235,6 +339,7 @@ fun ProfileEditScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // 3. Resume Link
             OutlinedTextField(
                 value = state.resumeUrl,
                 onValueChange = { viewModel.onResumeUrlChange(it) },
@@ -247,7 +352,118 @@ fun ProfileEditScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            var reminderTimeValue by remember {
+                mutableStateOf(
+                    TextFieldValue(
+                        text = state.reminderTimeText,
+                        selection = TextRange(state.reminderTimeText.length)
+                    )
+                )
+            }
+
+            LaunchedEffect(state.reminderTimeText) {
+                if (reminderTimeValue.text != state.reminderTimeText) {
+                    reminderTimeValue = TextFieldValue(
+                        text = state.reminderTimeText,
+                        selection = TextRange(state.reminderTimeText.length)
+                    )
+                }
+            }
+
+            // 4. Bar Reminder Time Field
+            OutlinedTextField(
+                value = reminderTimeValue,
+                onValueChange = { newValue ->
+                    val previousText = reminderTimeValue.text
+                    val newText = newValue.text
+                    val formatted = ProfileEditViewModel.formatTimeInput(newText, previousText)
+
+                    val newCursorPosition = if (newValue.selection.end == newText.length) {
+                        formatted.length
+                    } else {
+                        newValue.selection.end.coerceIn(0, formatted.length)
+                    }
+
+                    reminderTimeValue = TextFieldValue(
+                        text = formatted,
+                        selection = TextRange(newCursorPosition)
+                    )
+                    viewModel.onReminderTimeChange(formatted)
+                },
+                label = { Text("Время похода в бар") },
+                placeholder = { Text("ЧЧ:мм, например 18:30") },
+                trailingIcon = {
+                    IconButton(onClick = { showTimePickerDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = "Выбрать время"
+                        )
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = state.reminderTimeError != null,
+                supportingText = state.reminderTimeError?.let { err ->
+                    { Text(text = err, color = MaterialTheme.colorScheme.error) }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        if (!focusState.isFocused && state.reminderTimeText.isNotEmpty()) {
+                            viewModel.onReminderTimeBlur()
+                        }
+                    }
+            )
         }
+    }
+
+    // Material 3 TimePicker Dialog
+    if (showTimePickerDialog) {
+        val parsed = ReminderTime.parse(state.reminderTimeText)
+        val (initialHour, initialMinute) = if (parsed != null) {
+            parsed.hour to parsed.minute
+        } else {
+            val now = Calendar.getInstance()
+            now.get(Calendar.HOUR_OF_DAY) to now.get(Calendar.MINUTE)
+        }
+
+        val timePickerState = rememberTimePickerState(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { showTimePickerDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onReminderTimeSelected(timePickerState.hour, timePickerState.minute)
+                        showTimePickerDialog = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showTimePickerDialog = false }
+                ) {
+                    Text("Отмена")
+                }
+            },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TimePicker(state = timePickerState)
+                }
+            }
+        )
     }
 
     // Modal Bottom Sheet for Photo Selection
