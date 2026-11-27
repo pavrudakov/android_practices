@@ -3,9 +3,9 @@ package com.example.android_practice.ui.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android_practice.domain.error.HttpStatusException
-import com.example.android_practice.domain.error.NetworkUnavailableException
-import com.example.android_practice.domain.error.ResourceNotFoundException
+import com.example.android_practice.core.common.error.HttpStatusException
+import com.example.android_practice.core.common.error.NetworkUnavailableException
+import com.example.android_practice.core.common.error.ResourceNotFoundException
 import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.domain.usecase.GetBreweryDetailUseCase
 import com.example.android_practice.domain.usecase.ObserveIsFavoriteUseCase

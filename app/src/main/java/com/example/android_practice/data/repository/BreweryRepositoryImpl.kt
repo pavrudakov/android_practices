@@ -1,10 +1,10 @@
 package com.example.android_practice.data.repository
 
+import com.example.android_practice.core.common.error.HttpStatusException
+import com.example.android_practice.core.common.error.NetworkUnavailableException
+import com.example.android_practice.core.common.error.ResourceNotFoundException
 import com.example.android_practice.data.mapper.toDomain
 import com.example.android_practice.data.remote.BreweryApiService
-import com.example.android_practice.domain.error.HttpStatusException
-import com.example.android_practice.domain.error.NetworkUnavailableException
-import com.example.android_practice.domain.error.ResourceNotFoundException
 import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.domain.model.FilterSettings
 import com.example.android_practice.domain.repository.BreweryRepository

@@ -7,11 +7,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.android_practice.feature.profile.profileGraph
 import com.example.android_practice.ui.detail.BreweryDetailScreen
 import com.example.android_practice.ui.favorites.FavoritesScreen
 import com.example.android_practice.ui.list.BreweryListScreen
-import com.example.android_practice.ui.profile.ProfileScreen
-import com.example.android_practice.ui.profile.edit.ProfileEditScreen
 import com.example.android_practice.ui.settings.SettingsScreen
 
 @Composable
@@ -68,20 +67,7 @@ fun AppNavGraph(
             )
         }
 
-        composable(route = Screen.Profile.route) {
-            ProfileScreen(
-                onNavigateToEdit = {
-                    navController.navigate(Screen.ProfileEdit.route)
-                }
-            )
-        }
-
-        composable(route = Screen.ProfileEdit.route) {
-            ProfileEditScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
-        }
+        // Экраны «Профиль» и «Редактирование» живут в модуле :feature:profile
+        profileGraph(navController)
     }
 }

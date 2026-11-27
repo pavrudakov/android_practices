@@ -1,6 +1,6 @@
 package com.example.android_practice.domain.usecase
 
-import com.example.android_practice.domain.error.NetworkUnavailableException
+import com.example.android_practice.core.common.error.NetworkUnavailableException
 import com.example.android_practice.domain.model.Brewery
 import com.example.android_practice.domain.repository.BreweryRepository
 import com.example.android_practice.domain.repository.FavoritesRepository

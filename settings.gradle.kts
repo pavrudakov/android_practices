@@ -18,5 +18,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "android_practice"
 include(":app")
+include(":feature:profile")
+include(":core:common")
 
  
